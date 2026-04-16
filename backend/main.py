@@ -7,6 +7,8 @@ from typing import List, Optional
 from datetime import datetime, timedelta, date
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 import os, csv, io
 
 from database import engine, get_db
@@ -17,6 +19,7 @@ SECRET_KEY = "sua_chave_secreta_super_segura_aqui"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+GOOGLE_CLIENT_ID = "879431588451-320u19m4iff56p1i1r0488a0m82u2mic.apps.googleusercontent.com"
 
 # --- UTILITÁRIOS ---
 def hash_password(password: str): 
@@ -31,7 +34,7 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# --- SEGURANÇA: O "SEGURANÇA DA PORTA" ---
+# --- SEGURANÇA ---
 def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     exception = HTTPException(status_code=401, detail="Token inválido ou expirado")
     if not authorization or not authorization.startswith("Bearer "):
@@ -61,6 +64,9 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class GoogleLoginRequest(BaseModel):
+    token: str
+
 class UserCreate(BaseModel):
     nome: str
     email: str
@@ -72,13 +78,11 @@ class UserResponse(BaseModel):
     nome: str
     email: str
     role: str
-
     class Config:
         from_attributes = True
 
 class FingerprintSchema(BaseModel):
     hex_code: str
-
     class Config:
         from_attributes = True
 
@@ -91,11 +95,11 @@ class StudentResponse(BaseModel):
     foto_url: Optional[str] = None
     is_active: bool
     fingerprints: List[FingerprintSchema] = []
-
     class Config:
         from_attributes = True
 
 # --- ROTAS DE ACESSO ---
+
 @app.post("/auth/login")
 def login(dados: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == dados.email).first()
@@ -103,15 +107,29 @@ def login(dados: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
     return {"access_token": create_access_token(data={"sub": user.email, "role": user.role}), "role": user.role}
 
-# --- GESTÃO DE USUÁRIOS (PROTEGIDA) ---
+@app.post("/auth/google")
+def google_auth(data: GoogleLoginRequest, db: Session = Depends(get_db)):
+    try:
+        idinfo = id_token.verify_oauth2_token(data.token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        email = idinfo['email']
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            user = models.User(nome=idinfo.get('name', 'Usuário Google'), email=email, role="fiscal")
+            db.add(user); db.commit(); db.refresh(user)
+        token = create_access_token(data={"sub": user.email, "role": user.role})
+        return {"access_token": token, "role": user.role, "nome": user.nome}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token do Google inválido")
+
+# --- GESTÃO DE USUÁRIOS ---
 @app.post("/users", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Removi temporariamente o Depends(get_current_user) para você criar o primeiro admin
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
     novo = models.User(nome=user.nome, email=user.email, role=user.role, hashed_password=hash_password(user.password))
     db.add(novo); db.commit(); db.refresh(novo)
     return novo
+
 @app.get("/users", response_model=List[UserResponse])
 def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
@@ -121,20 +139,15 @@ def list_users(db: Session = Depends(get_db)):
 def check_in_meal(data: FingerprintSchema, db: Session = Depends(get_db)):
     fp = db.query(models.Fingerprint).filter(models.Fingerprint.hex_code == data.hex_code).first()
     if not fp: raise HTTPException(status_code=404, detail="Digital não reconhecida")
-    
     student = fp.student
     hoje = date.today()
-    
     already_eaten = db.query(models.Meal).filter(
         models.Meal.student_id == student.id,
         models.Meal.data_hora >= datetime.combine(hoje, datetime.min.time())
     ).first()
-    
     if already_eaten:
         return {"status": "NEGADO", "message": f"{student.nome} já realizou a refeição hoje!", "foto": student.foto_url}
-    
-    nova_refeicao = models.Meal(student_id=student.id, tipo_acesso="BIOMETRIA")
-    db.add(nova_refeicao); db.commit()
+    db.add(models.Meal(student_id=student.id, tipo_acesso="BIOMETRIA")); db.commit()
     return {"status": "CONFIRMADO", "message": f"Bom apetite, {student.nome}!", "foto": student.foto_url}
 
 # --- ESTUDANTES ---
