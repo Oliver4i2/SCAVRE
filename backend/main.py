@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta, date
@@ -18,8 +19,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # --- UTILITÁRIOS ---
-def hash_password(password: str): return pwd_context.hash(password)
-def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
+def hash_password(password: str): 
+    return pwd_context.hash(password)
+
+def verify_password(plain, hashed): 
+    return pwd_context.verify(plain, hashed)
+
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -36,9 +41,11 @@ def get_current_user(authorization: Optional[str] = Header(None), db: Session = 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        if email is None: raise exception
+        if email is None: 
+            raise exception
         user = db.query(models.User).filter(models.User.email == email).first()
-        if user is None: raise exception
+        if user is None: 
+            raise exception
         return user
     except JWTError:
         raise exception
@@ -50,15 +57,43 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # --- SCHEMAS ---
-from pydantic import BaseModel
-class LoginRequest(BaseModel): email: str; password: str
-class UserCreate(BaseModel): nome: str; email: str; password: str; role: str
-class UserResponse(BaseModel): id: int; nome: str; email: str; role: str
-    class Config: from_attributes = True
-class FingerprintSchema(BaseModel): hex_code: str
-    class Config: from_attributes = True
-class StudentResponse(BaseModel): id: int; nome: str; matricula: str; curso: str; turma: str; foto_url: str | None; is_active: bool; fingerprints: List[FingerprintSchema] = []
-    class Config: from_attributes = True
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class UserCreate(BaseModel):
+    nome: str
+    email: str
+    password: str
+    role: str
+
+class UserResponse(BaseModel):
+    id: int
+    nome: str
+    email: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+class FingerprintSchema(BaseModel):
+    hex_code: str
+
+    class Config:
+        from_attributes = True
+
+class StudentResponse(BaseModel):
+    id: int
+    nome: str
+    matricula: str
+    curso: str
+    turma: str
+    foto_url: Optional[str] = None
+    is_active: bool
+    fingerprints: List[FingerprintSchema] = []
+
+    class Config:
+        from_attributes = True
 
 # --- ROTAS DE ACESSO ---
 @app.post("/auth/login")
@@ -70,23 +105,26 @@ def login(dados: LoginRequest, db: Session = Depends(get_db)):
 
 # --- GESTÃO DE USUÁRIOS (PROTEGIDA) ---
 @app.post("/users", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db), current: models.User = Depends(get_current_user)):
-    if current.role != "admin": raise HTTPException(status_code=403, detail="Apenas admins criam usuários")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    # Removi temporariamente o Depends(get_current_user) para você criar o primeiro admin
+    if db.query(models.User).filter(models.User.email == user.email).first():
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
     novo = models.User(nome=user.nome, email=user.email, role=user.role, hashed_password=hash_password(user.password))
     db.add(novo); db.commit(); db.refresh(novo)
     return novo
+@app.get("/users", response_model=List[UserResponse])
+def list_users(db: Session = Depends(get_db)):
+    return db.query(models.User).all()
 
-# --- LÓGICA DA CATRACA (O CORAÇÃO) ---
+# --- LÓGICA DA CATRACA ---
 @app.post("/meals/check-in")
 def check_in_meal(data: FingerprintSchema, db: Session = Depends(get_db)):
-    # 1. Identifica o aluno pela digital
     fp = db.query(models.Fingerprint).filter(models.Fingerprint.hex_code == data.hex_code).first()
     if not fp: raise HTTPException(status_code=404, detail="Digital não reconhecida")
     
     student = fp.student
     hoje = date.today()
     
-    # 2. Verifica se já comeu hoje (Lógica de duplicidade)
     already_eaten = db.query(models.Meal).filter(
         models.Meal.student_id == student.id,
         models.Meal.data_hora >= datetime.combine(hoje, datetime.min.time())
@@ -95,13 +133,11 @@ def check_in_meal(data: FingerprintSchema, db: Session = Depends(get_db)):
     if already_eaten:
         return {"status": "NEGADO", "message": f"{student.nome} já realizou a refeição hoje!", "foto": student.foto_url}
     
-    # 3. Registra a refeição
     nova_refeicao = models.Meal(student_id=student.id, tipo_acesso="BIOMETRIA")
     db.add(nova_refeicao); db.commit()
-    
     return {"status": "CONFIRMADO", "message": f"Bom apetite, {student.nome}!", "foto": student.foto_url}
 
-# --- ESTUDANTES (MANTIDAS COM PROTEÇÃO) ---
+# --- ESTUDANTES ---
 @app.post("/students", response_model=StudentResponse)
 async def create_student(nome: str = Form(...), matricula: str = Form(...), curso: str = Form(...), turma: str = Form(...), foto: UploadFile = File(...), db: Session = Depends(get_db), current: models.User = Depends(get_current_user)):
     ext = foto.filename.split(".")[-1]; file_path = f"static/avatars/{matricula}.{ext}"
@@ -118,5 +154,6 @@ def list_students(search: str = None, db: Session = Depends(get_db)):
 @app.post("/students/{student_id}/fingerprints")
 def add_fingerprint(student_id: int, data: FingerprintSchema, db: Session = Depends(get_db), current: models.User = Depends(get_current_user)):
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not student: raise HTTPException(status_code=404, detail="Estudante não encontrado")
     if len(student.fingerprints) >= 3: raise HTTPException(status_code=400, detail="Limite atingido")
     db.add(models.Fingerprint(student_id=student_id, hex_code=data.hex_code)); db.commit(); return {"message": "Sucesso"}
