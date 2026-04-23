@@ -100,27 +100,51 @@ class StudentResponse(BaseModel):
 
 # --- ROTAS DE ACESSO ---
 
+# --- ROTAS DE ACESSO ---
+
 @app.post("/auth/login")
 def login(dados: LoginRequest, db: Session = Depends(get_db)):
+    print(f"🕵️ TENTANDO LOGAR MANUALMENTE -> E-mail: '{dados.email}'") # Isso vai te ajudar a ver no terminal!
     user = db.query(models.User).filter(models.User.email == dados.email).first()
+    
     if not user or not verify_password(dados.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
-    return {"access_token": create_access_token(data={"sub": user.email, "role": user.role}), "role": user.role}
+        
+    return {
+        "access_token": create_access_token(data={"sub": user.email, "role": user.role}), 
+        "role": user.role, 
+        "nome": user.nome
+    }
+
 
 @app.post("/auth/google")
 def google_auth(data: GoogleLoginRequest, db: Session = Depends(get_db)):
     try:
+        # 1. Valida o token do Google
         idinfo = id_token.verify_oauth2_token(data.token, google_requests.Request(), GOOGLE_CLIENT_ID)
         email = idinfo['email']
+        
+        # 2. Procura o usuário
         user = db.query(models.User).filter(models.User.email == email).first()
+        
+        # 3. Cria com senha falsa se não existir, ou atualiza para fiscal
         if not user:
-            user = models.User(nome=idinfo.get('name', 'Usuário Google'), email=email, role="fiscal")
-            db.add(user); db.commit(); db.refresh(user)
+            senha_google = hash_password("senha_impossivel_google_12345") 
+            user = models.User(nome=idinfo.get('name', 'Usuário Google'), email=email, role="fiscal", hashed_password=senha_google)
+            db.add(user)
+        else:
+            user.role = "fiscal" 
+            
+        db.commit()
+        db.refresh(user)
+        
+        # 4. Gera o nosso Token SCAVRE
         token = create_access_token(data={"sub": user.email, "role": user.role})
         return {"access_token": token, "role": user.role, "nome": user.nome}
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token do Google inválido")
-
+        
+    except Exception as e:
+        print(f"ERRO CRÍTICO NO GOOGLE LOGIN: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao salvar usuário do Google")
 # --- GESTÃO DE USUÁRIOS ---
 @app.post("/users", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
