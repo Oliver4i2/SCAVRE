@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Date
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, date
 from database import Base
 
 class User(Base):
@@ -12,7 +12,7 @@ class User(Base):
     google_id = Column(String, nullable=True)
     role = Column(String)
     is_active = Column(Boolean, default=True)
-
+    
 class Student(Base):
     __tablename__ = "students"
     id = Column(Integer, primary_key=True, index=True)
@@ -22,7 +22,9 @@ class Student(Base):
     turma = Column(String)
     foto_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    ultimo_almoco = Column(Date, nullable=True)
     
+    biometria_hex = Column(String, nullable=True)
     # Relacionamento com as digitais
     fingerprints = relationship("Fingerprint", back_populates="student")
 

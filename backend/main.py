@@ -174,6 +174,51 @@ def check_in_meal(data: FingerprintSchema, db: Session = Depends(get_db)):
     db.add(models.Meal(student_id=student.id, tipo_acesso="BIOMETRIA")); db.commit()
     return {"status": "CONFIRMADO", "message": f"Bom apetite, {student.nome}!", "foto": student.foto_url}
 
+# 1. Esquema para receber o código do leitor
+class BiometriaVerify(BaseModel):
+    hex_code: str
+
+# Rota que verifica e libera/bloqueia a catraca
+@app.post("/catraca/verificar")
+def verificar_acesso(dados: BiometriaVerify, db: Session = Depends(get_db)):
+    alunos = db.query(models.Student).all()
+    aluno_encontrado = None
+    
+    for aluno in alunos:
+        for digital in aluno.fingerprints:
+            if digital.hex_code == dados.hex_code:
+                aluno_encontrado = aluno
+                break
+        if aluno_encontrado:
+            break
+            
+    if not aluno_encontrado:
+        raise HTTPException(status_code=404, detail="Biometria não reconhecida.")
+    
+    # --- REGRAS DE NEGÓCIO SCAVRE ---
+
+    # 1. Validação de Aluno Ativo
+    if getattr(aluno_encontrado, 'is_active', True) == False:
+        return {"status": "inativo", "aluno": {"nome": aluno_encontrado.nome}}
+
+    # 2. Validação de Única Refeição (Renovação à meia-noite natural)
+    hoje = date.today()
+    if aluno_encontrado.ultimo_almoco == hoje:
+        return {"status": "ja_almocou", "aluno": {"nome": aluno_encontrado.nome}}
+
+    # 3. Liberação e Registro do Almoço
+    aluno_encontrado.ultimo_almoco = hoje
+    db.commit()
+
+    return {
+        "status": "liberado",
+        "aluno": {
+            "nome": aluno_encontrado.nome,
+            "matricula": aluno_encontrado.matricula,
+            "foto_url": aluno_encontrado.foto_url
+        }
+    }
+
 # --- ESTUDANTES ---
 @app.post("/students", response_model=StudentResponse)
 async def create_student(nome: str = Form(...), matricula: str = Form(...), curso: str = Form(...), turma: str = Form(...), foto: UploadFile = File(...), db: Session = Depends(get_db), current: models.User = Depends(get_current_user)):

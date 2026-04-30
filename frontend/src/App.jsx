@@ -34,6 +34,8 @@ function App() {
   const [turma, setTurma] = useState('');
   const [foto, setFoto] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [leituraFisica, setLeituraFisica] = useState('');
+  const [resultadoCatraca, setResultadoCatraca] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -91,6 +93,28 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
   };
+
+  const verificarBiometria = async (hexCode) => {
+    try {
+      const res = await axios.post(`${API_URL}/catraca/verificar`, { hex_code: hexCode });
+      
+      // O backend agora gerencia o status: liberado, inativo ou ja_almocou
+      setResultadoCatraca(res.data); 
+      
+      setTimeout(() => setResultadoCatraca(null), 4000); 
+    } catch (err) {
+      setResultadoCatraca({ status: 'negado' }); // Erro 404 cai aqui
+      setTimeout(() => setResultadoCatraca(null), 3000);
+    }
+  };
+
+// O leitor físico digita muito rápido e aperta "Enter"
+const handleKeyDownLeitor = (e) => {
+  if (e.key === 'Enter') {
+    verificarBiometria(leituraFisica);
+    setLeituraFisica(''); // Zera o campo invisível
+  }
+};
 
   // --- ESTILOS REUTILIZÁVEIS ---
   const inputStyle = { padding: '12px', borderRadius: '6px', border: `1px solid ${theme.borda}`, outline: 'none', width: '100%', boxSizing: 'border-box' };
@@ -189,6 +213,75 @@ function App() {
             </button>
           )}
         </nav>
+
+{/* ========================================== */}
+        {/* MODO QUIOSQUE: TELA EXCLUSIVA DO OPERADOR  */}
+        {/* ========================================== */}
+        {userRole === 'operador' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
+            
+            {/* CAMPO OCULTO: É aqui que o leitor USB "digita" */}
+            <input 
+              autoFocus
+              type="text" 
+              value={leituraFisica}
+              onChange={(e) => setLeituraFisica(e.target.value)}
+              onKeyDown={handleKeyDownLeitor}
+              onBlur={(e) => e.target.focus()} // Truque de mestre: Força o cursor a nunca sair daqui!
+              style={{ opacity: 0, position: 'absolute', zIndex: -1 }} // Fica invisível
+            />
+
+            <div style={{ ...cardStyle, width: '600px', textAlign: 'center', padding: '40px' }}>
+              <h2 style={{ color: theme.verdeIF, margin: '0 0 20px 0' }}>SCAVRE - Terminal da Catraca</h2>
+              <p style={{ color: '#666', marginBottom: '30px' }}>O sistema está aguardando a leitura biométrica...</p>
+              
+              {/* TELA DE RESULTADO (Aparece a foto gigante do aluno) */}
+              <div style={{ height: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', borderRadius: '15px', backgroundColor: resultadoCatraca?.status === 'liberado' ? '#e8f5e9' : resultadoCatraca?.status === 'negado' ? '#ffebee' : '#f5f5f5', border: `4px solid ${resultadoCatraca?.status === 'liberado' ? theme.verdeIF : resultadoCatraca?.status === 'negado' ? theme.vermelhoIF : theme.borda}` }}>
+                
+                {!resultadoCatraca && (
+                  <span style={{ fontSize: '60px', animation: 'pulse 2s infinite' }}>☝️</span>
+                )}
+
+                {resultadoCatraca?.status === 'liberado' && (
+                  <>
+                    <img src={`${API_URL}${resultadoCatraca.aluno.foto_url}`} alt="Aluno" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: `4px solid ${theme.verdeIF}`, marginBottom: '15px' }} />
+                    <h2 style={{ color: theme.verdeIF, margin: '0' }}>ACESSO LIBERADO</h2>
+                    <h3 style={{ margin: '5px 0' }}>{resultadoCatraca.aluno.nome}</h3>
+                    <p style={{ margin: '0', color: '#666' }}>Matrícula: {resultadoCatraca.aluno.matricula}</p>
+                  </>
+                )}
+
+                {resultadoCatraca?.status === 'negado' && (
+                  <>
+                    <span style={{ fontSize: '80px', marginBottom: '10px' }}>❌</span>
+                    <h2 style={{ color: theme.vermelhoIF, margin: '0' }}>ACESSO NEGADO</h2>
+                    <p style={{ color: '#666' }}>Biometria não cadastrada.</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STATUS: JÁ ALMOÇOU */}
+                {resultadoCatraca?.status === 'ja_almocou' && (
+                  <>
+                    <span style={{ fontSize: '80px', marginBottom: '10px' }}>🍽️</span>
+                    <h2 style={{ color: '#F57C00', margin: '0' }}>REFEIÇÃO JÁ REALIZADA</h2>
+                    <p style={{ color: '#666', marginBottom: '10px' }}>Este aluno já consumiu o almoço hoje.</p>
+                    <h3 style={{ margin: '0' }}>{resultadoCatraca.aluno.nome}</h3>
+                  </>
+                )}
+
+                {/* STATUS: INATIVO/BLOQUEADO */}
+                {resultadoCatraca?.status === 'inativo' && (
+                  <>
+                    <span style={{ fontSize: '80px', marginBottom: '10px' }}>⚠️</span>
+                    <h2 style={{ color: '#F57C00', margin: '0' }}>ACESSO BLOQUEADO</h2>
+                    <p style={{ color: '#666', marginBottom: '10px' }}>Matrícula Inativa no Sistema.</p>
+                    <h3 style={{ margin: '0' }}>{resultadoCatraca.aluno.nome}</h3>
+                  </>
+                )}
 
         {/* CONTEÚDO DAS ABAS */}
         {activeTab === 'alunos' && (
