@@ -1,184 +1,205 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+/* --- VARIÁVEIS E DIRETRIZES DO IFB --- */
+:root {
+  --verde-ifb: #2F9E41;
+  --verde-ifb-hover: #247e33;
+  --vermelho-ifb: #CD191E;
+  --fundo-app: #F2F5F3;
+  --branco: #FFFFFF;
+  --texto-base: #2D3748;
+  --texto-mutado: #718096;
+  --borda: #E2E8F0;
+  --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --radius: 14px;
 }
 
-.hero {
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- MOLDURA VERTICAL IFB (TELA INTEIRA) --- */
+body {
+  background-color: var(--fundo-app);
+  color: var(--texto-base);
+  -webkit-font-smoothing: antialiased;
   position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+  min-height: 100vh;
 }
 
-#center {
+/* Faixa Esquerda */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 78px; /* Espessura da faixa vertical */
+  height: 100vh;
+  background-color: var(--verde-ifb);
+  z-index: 9999; /* Garante que fica por cima de tudo */
+  pointer-events: none; /* Não bloqueia cliques na tela */
+}
+
+/* Faixa Direita */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 78px; /* Espessura da faixa vertical */
+  height: 100vh;
+  background-color: var(--verde-ifb);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Ajuste de espaçamento para o conteúdo não ser coberto pelas faixas laterais */
+.app-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+/* --- ANIMAÇÕES --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+@keyframes pulseBorder {
+  0% { box-shadow: 0 0 0 0 rgba(47, 158, 65, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(47, 158, 65, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 158, 65, 0); }
 }
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- CARDS MODERNOS COM EFEITO ELEVADO --- */
+.card-glass {
+  background: var(--branco);
+  border-radius: var(--radius);
+  padding: 30px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--borda);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* --- INTERATIVIDADE DE BOTÕES --- */
+.interactive-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.interactive-btn:active {
+  transform: scale(0.97);
 }
 
-.ticks {
-  position: relative;
+.nav-tab {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--texto-mutado);
+  transition: all 0.2s ease;
+}
+
+.nav-tab.active {
+  background: var(--branco);
+  color: var(--texto-base);
+  box-shadow: var(--shadow-md);
+}
+
+/* --- INPUTS --- */
+.modern-input {
   width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  background: rgba(255, 255, 255, 0.8);
+  outline: none;
+  transition: all 0.2s ease;
+  color: var(--texto-base);
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+.modern-input:focus {
+  border-color: var(--verde-ifb);
+  background: var(--branco);
+  box-shadow: 0 0 0 4px rgba(47, 158, 65, 0.12);
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+/* --- TABELAS --- */
+.table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--borda);
+  background: var(--branco);
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.modern-table th {
+  background: #F8FAFC;
+  padding: 16px;
+  color: var(--texto-mutado);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--borda);
+}
+
+.modern-table tr {
+  transition: background-color 0.2s ease;
+}
+
+.modern-table tr:hover {
+  background-color: #F8FAFC;
+}
+
+.modern-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--borda);
+  font-size: 14px;
+}
+
+/* --- ESTADOS DA CATRACA --- */
+.pulse-active {
+  animation: pulseBorder 2s infinite;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
 }
