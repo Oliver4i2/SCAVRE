@@ -1,4 +1,6 @@
 ACESSE O PROJETO AQUI:https://oliver4i2.github.io/SCAVRE/
+<img width="1272" height="122" alt="SCAVRE" src="https://github.com/user-attachments/assets/ff8fe3fb-c144-4739-9e3c-767f1c1c7c71" />
+
 # SCAVRE
 
 # Sistema de Controle de Acesso e Voucher de Refeição Escolar
