@@ -78,29 +78,3 @@ erDiagram
         float valor_liquidado
     }
 
-flowchart LR
-    %% Atores
-    Operador([📟 Operador / Catraca])
-    Empresa([🏢 Empresa / Cantina])
-    Fiscal([👮 Fiscal de Contrato])
-    Gestor([🧑‍🏫 Gestão Educacional])
-
-    %% Casos de Uso
-    ValidarAcesso(Validar Acesso Físico)
-    RegistrarOcorrencia(Registrar Ocorrência)
-    AcompanharDash(Visualizar Faturamento)
-    HomologarMes(Emitir Protocolo de Baixa)
-    GerirAlunos(Cadastrar/Atualizar Alunos)
-    Exportar(Gerar Relatórios Oficiais)
-
-    %% Conexões
-    Operador --> ValidarAcesso
-    Operador --> RegistrarOcorrencia
-
-    Empresa --> AcompanharDash
-
-    Fiscal --> HomologarMes
-    Fiscal --> Exportar
-
-    Gestor --> GerirAlunos
-    Gestor --> Exportar
