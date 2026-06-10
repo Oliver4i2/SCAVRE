@@ -11,6 +11,7 @@ Sistema web para controle e monitoramento de refeições em escolas públicas ut
 * **Backend:** Python 3, FastAPI, SQLAlchemy (SQL), JWT, Google OAuth.
 * **Frontend:** React, Vite.
 * **Integrações:** Leitor Biométrico Local (via Hex Code).
+<img width="1272" height="122" alt="SCAVRE" src="https://github.com/user-attachments/assets/ff8fe3fb-c144-4739-9e3c-767f1c1c7c71" />
 
 ## 🚀 Como Executar Localmente (Codespaces)
 
