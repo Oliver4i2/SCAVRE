@@ -1,6 +1,3 @@
-ACESSE O PROJETO AQUI:https://oliver4i2.github.io/SCAVRE/
-<img width="1272" height="122" alt="SCAVRE" src="https://github.com/user-attachments/assets/ff8fe3fb-c144-4739-9e3c-767f1c1c7c71" />
-
 <div align="center">
   <h1 style="color: #2F9E41;">SCAVRE</h1>
   <p><strong>Sistema de Controle de Acesso e Voucher Escolar | IFB</strong></p>
