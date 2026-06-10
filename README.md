@@ -1,4 +1,3 @@
-
 <div align="center">
   <h1 style="color: #2F9E41;">SCAVRE</h1>
   <p><strong>Sistema de Controle de Acesso e Voucher Escolar | IFB</strong></p>
@@ -15,31 +14,63 @@
 
 ## 📖 Sobre o Projeto
 
-O **SCAVRE** é uma solução Full-Stack desenvolvida para modernizar, gerenciar e auditar o fornecimento de refeições institucionais no IFB. Integrando leitores biométricos instalados nas catracas físicas ao ecossistema web, o sistema elimina fraudes de duplicidade de consumo, simplifica o apontamento de ocorrências e automatiza o processo de repasse financeiro para a empresa terceirizada (Cantina) por meio de chaves de auditoria criptografadas.
+O **SCAVRE** é uma solução Full-Stack desenvolvida para modernizar e auditar o fornecimento de refeições institucionais. Através de validação biométrica e controle de catracas, o sistema elimina fraudes, automatiza repasses financeiros para a empresa terceirizada (Cantina) e gera protocolos criptografados para a gestão do contrato.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema (Padrão MVC Adaptado)
 
-O projeto adota o padrão arquitetural **MVC (Model-View-Controller)** de forma desacoplada, otimizando a manutenção do código e isolando as regras de negócio da interface visual:
+O projeto segue uma arquitetura baseada nos princípios do **MVC (Model-View-Controller)**, adaptada para o ecossistema moderno de APIs RESTful:
+
+*   **View (Visão):** A interface do usuário é totalmente desacoplada, construída em React/Vite. Ela é responsável por renderizar os dados e capturar as interações dos perfis (Operador, Gestor, Fiscal, etc.).
+*   **Controller (Controlador):** O backend construído em Python com **FastAPI** recebe as requisições HTTP da View, processa as regras de negócio (ex: verificar se o aluno já almoçou hoje) e orquestra a comunicação.
+*   **Model (Modelo):** Gerenciado pelo banco de dados e ORM, é a camada de dados brutos, onde as estruturas de `Alunos`, `Ocorrências` e `Configurações` estão definidas.
+
+---
+
+## 📊 Diagrama de Entidade-Relacionamento (MER)
+
+O esquema abaixo ilustra como as entidades se relacionam no banco de dados para garantir a rastreabilidade do consumo e controle de ocorrências.
 
 ```mermaid
-graph TD
-    subgraph CLIENT_SIDE [Camada de Visão - Front-end]
-        View[React.js SPA / Vite]
-    end
+erDiagram
+    ALUNO ||--o{ REFEICAO : "consome"
+    ALUNO ||--o{ OCORRENCIA : "registra"
     
-    subgraph SERVER_SIDE [Camada de Controle - Back-end]
-        Controller[FastAPI REST API]
-    end
+    ALUNO {
+        int id PK
+        string nome
+        string matricula
+        string curso
+        string turma
+        string foto_url
+        string hex_code_biometria
+    }
     
-    subgraph DATA_SIDE [Camada de Modelo - Banco de Dados]
-        Model[Modelos SQLAlchemy / PostgreSQL]
-    end
-
-    %% Fluxo de comunicação
-    Hardware[Leitor Biométrico / Catraca] -->|Envia HEX Code| View
-    View -->|Requisições HTTP / WebSockets| Controller
-    Controller -->|Orquestra Regras de Negócio| Model
-    Model -->|Retorna Query/Dados| Controller
-    Controller -->|Responde JSON / Estado| View
+    REFEICAO {
+        int id PK
+        int aluno_id FK
+        datetime data_hora
+        string metodo "biometria | manual"
+    }
+    
+    OCORRENCIA {
+        int id PK
+        int aluno_id FK
+        string descricao
+        datetime data_hora
+    }
+    
+    CONFIGURACAO {
+        int id PK
+        float valor_refeicao
+        time horario_inicio
+        time horario_fim
+    }
+    
+    PROTOCOLO_AUDITORIA {
+        string chave PK
+        string mes_referencia
+        int total_refeicoes
+        float valor_liquidado
+    }
