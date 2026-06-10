@@ -1,12 +1,4 @@
- ![Status][(https://img.shields.io/badge/Status-Em_Desenvolvimento-2F9E41?style=for-the-badge](https://oliver4i2.github.io/SCAVRE/))
-<div align="center">
-  <h1 style="color: #2F9E41;">SCAVRE</h1>
-  <p><strong>Sistema de Controle de Acesso e Voucher Escolar | IFB</strong></p>
-
-  ![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-2F9E41?style=for-the-badge)
-  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-  ![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
-  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+<<https://oliver4i2.github.io/SCAVRE/>>
   ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
   ![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)
 </div>
