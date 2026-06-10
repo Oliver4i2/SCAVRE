@@ -5,7 +5,6 @@ ACESSE O PROJETO AQUI:https://oliver4i2.github.io/SCAVRE/
 
 # Sistema de Controle de Acesso e Voucher de Refeição Escolar
 Sistema web para controle de acesso e monitoramento de voucher de refeição em escolas públicas, utilizando identificação biométrica como principal mecanismo de validação, garantindo que cada estudante tenha direito a uma única refeição por dia, com renovação automática, fallback manual com confirmação visual por foto, e geração de relatórios detalhados para pagamento baseado em consumo real, atendendo a múltiplos perfis de usuário com permissões específicas.
-<img width="1272" height="122" alt="SCAVRE" src="https://github.com/user-attachments/assets/ff8fe3fb-c144-4739-9e3c-767f1c1c7c71" />
 
 ## 🎯 Objetivo
 Sistema web para controle e monitoramento de refeições em escolas públicas utilizando identificação biométrica. O sistema garante o direito a uma única refeição diária por estudante, oferece fallback manual com auditoria visual e gera relatórios precisos para pagamento baseado em consumo real.
