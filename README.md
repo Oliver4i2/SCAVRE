@@ -149,8 +149,8 @@ cd SCAVRE
 2. **Configurar e Executar o Backend (API)**
 * Abra um terminal e acesse o diretório do backend:
 
-cd backend
 ```bash
+cd backend
 # Criar um ambiente virtual para isolar as dependências
 python -m venv venv
 
