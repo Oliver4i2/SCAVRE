@@ -6,7 +6,7 @@ import './App.css';
 
 const axios = axiosDirect.create();
 
-const API_URL = 'https://zany-happiness-v6qrjxw4qr6p3r75-8000.app.github.dev';
+const API_URL = 'https://scavre.onrender.com';
 const GOOGLE_CLIENT_ID = "879431588451-320u19m4iff56p1i1r0488a0m82u2mic.apps.googleusercontent.com";
 
 const theme = { 
