@@ -109,7 +109,7 @@ erDiagram
 ````
 
 ## Casos de Uso por Perfil de Acesso
-
+```mermaid
 flowchart LR
     subgraph ATORES [Perfis de Acesso]
         O((Operador / Catraca))
@@ -134,5 +134,5 @@ flowchart LR
     F --> C6
     G --> C5
     A --> C7
-
+````
 ---
