@@ -107,35 +107,4 @@ erDiagram
         float valor_liquidado
     }
 
-```
----
 
-## Casos de Uso por Perfil de Acesso
-
-flowchart LR
-    subgraph ATORES [Perfis de Acesso]
-        O((Operador / Catraca))
-        E((Empresa / Cantina))
-        F((Fiscal de Contrato))
-        G((Gestor Educacional))
-        A((Admin de TI))
-    end
-
-    subgraph CASOS_DE_USO [Funcionalidades]
-        C1([Validar Acesso / Barrar Duplicidade])
-        C2([Registrar Ocorrência Disciplinar])
-        C3([Visualizar Faturamento Semanal e Diário])
-        C4([Auditar Consumo e Emitir Protocolo])
-        C5([Gestão CRUD de Alunos])
-        C6([Exportar Relatórios Oficiais])
-        C7([Gerir Parâmetros e Custos])
-    end
-
-    O --> C1
-    O --> C2
-    E --> C3
-    F --> C4
-    F --> C6
-    G --> C5
-    A --> C7
-```
