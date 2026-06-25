@@ -106,5 +106,7 @@ erDiagram
         int total_refeicoes
         float valor_liquidado
     }
+````
 
+## Casos de Uso por Perfil de Acesso
 
