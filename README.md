@@ -136,3 +136,44 @@ flowchart LR
     A --> C7
 ````
 ---
+
+## 💻 Instruções para Instalação, Configuração e Execução
+
+O ecossistema é projetado para rodar de forma leve e rápida em qualquer ambiente de desenvolvimento. Siga os passos abaixo:
+
+1. Clonar o Repositório
+git clone [https://github.com/SeuUsuario/SCAVRE.git](https://github.com/SeuUsuario/SCAVRE.git)
+cd SCAVRE
+
+2. Configurar e Executar o Backend (API)
+Abra um terminal e acesse o diretório do backend:
+cd backend
+
+# Criar um ambiente virtual para isolar as dependências
+python -m venv venv
+
+# Ativar o ambiente virtual
+# Linux/macOS:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# Instalar as bibliotecas requeridas
+pip install -r requirements.txt
+
+# Inicializar o servidor e criar as tabelas do banco de dados automaticamente
+uvicorn main:app --reload --port 8000
+
+O backend estará pronto e operante em http://localhost:8000.
+
+3. Configurar e Executar o Frontend (Interface)
+Mantenha o terminal do backend rodando, abra uma nova janela de terminal, volte para a raiz do projeto e acesse o frontend:
+cd frontend
+
+# Instalar os pacotes e dependências Node.js
+npm install
+
+# Iniciar o servidor de desenvolvimento do Vite
+npm run dev
+
+O painel do sistema estará disponível no navegador através do endereço http://localhost:5173. Para simular a catraca, logue como Operador e utilize a contingência manual.
