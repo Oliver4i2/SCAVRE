@@ -107,7 +107,7 @@ erDiagram
         float valor_liquidado
     }
 
-
+```
 ---
 
 ## Casos de Uso por Perfil de Acesso
@@ -138,4 +138,4 @@ flowchart LR
     F --> C6
     G --> C5
     A --> C7
-
+```
